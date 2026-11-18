@@ -4,7 +4,6 @@ Static site, no build step. Open `index.html` or deploy the folder to any static
 (Cloudflare Pages, Netlify, GitHub Pages).
 
 - `index.html` – public site (SEO meta, AutoBodyShop + FAQPage structured data)
-- `estimate.html` – shop-side estimate writer (not indexed; saves drafts in the browser)
 - `styles.css`, `assets/` – shared styles, logos
 - `robots.txt`, `sitemap.xml`, `llms.txt` – crawler and AI-search files
 
