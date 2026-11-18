@@ -1,0 +1,8 @@
+# PREVIEW: blocks all crawlers while on a temporary URL. At launch, restore the commented rules.
+User-agent: *
+Disallow: /
+
+# User-agent: *
+# Allow: /
+# Disallow: /estimate.html
+# Sitemap: https://www.allprocollisionatl.com/sitemap.xml
