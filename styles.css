@@ -185,7 +185,7 @@ p { margin: 0; }
 .rating-meta { display: grid; gap: 4px; font: 600 0.9rem/1 var(--label); letter-spacing: 0.14em; text-transform: uppercase; color: var(--primer); }
 .rating:hover .rating-meta { color: #fff; }
 .stars { color: var(--star); letter-spacing: 0.12em; font-size: 1.15rem; line-height: 1; }
-.rev-scroller { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rev-scroller { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
 .rev-scroller::-webkit-scrollbar { display: none; }
 .rev-track { list-style: none; margin: 0; display: flex; gap: 18px; width: max-content;
   padding: 4px max(20px, env(safe-area-inset-right, 0px)) 4px max(20px, calc((100vw - var(--wrap)) / 2 + 20px)); }

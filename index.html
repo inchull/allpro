@@ -478,30 +478,53 @@ var SHOP_EMAIL = "allprocollisionatl@gmail.com"; // TODO-NAP
   });
 
 
-  /* reviews: slow auto-scroll that loops; pauses on hover, touch, focus or the button; off for reduced motion */
+  /* reviews: slow auto-scroll that loops. The visitor always wins: any touch, drag, wheel or key hands
+     control to them, and auto-scroll only resumes once the row has been still for a moment, picking up
+     from wherever they left it. Off entirely for reduced motion. */
   (function () {
     var sc = document.getElementById("rev-scroller"), btn = document.getElementById("rev-pause");
-    var track = sc.querySelector(".rev-track"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var held = false, stopped = reduce, x = 0;
-    if (reduce) { btn.hidden = true; return; }
-    Array.prototype.slice.call(track.children).forEach(function (li) {
+    var track = sc.querySelector(".rev-track");
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { btn.hidden = true; return; }
+
+    // five copies of the cards, starting on the middle one, so there is plenty of room to swipe either way
+    var originals = Array.prototype.slice.call(track.children);
+    for (var k = 0; k < 4; k++) originals.forEach(function (li) {
       var c = li.cloneNode(true); c.setAttribute("aria-hidden", "true");
       c.querySelectorAll("a").forEach(function (a) { a.tabIndex = -1; });
       track.appendChild(c);
     });
-    ["pointerenter", "focusin", "touchstart"].forEach(function (e) { sc.addEventListener(e, function () { held = true; }, { passive: true }); });
-    ["pointerleave", "focusout", "touchend"].forEach(function (e) { sc.addEventListener(e, function () { held = false; x = sc.scrollLeft; }, { passive: true }); });
-    btn.addEventListener("click", function () {
-      stopped = !stopped; btn.setAttribute("aria-pressed", stopped); btn.textContent = stopped ? "Resume scrolling" : "Pause scrolling"; x = sc.scrollLeft;
+    var setW = function () { return track.children[originals.length].offsetLeft - track.children[0].offsetLeft; };
+    var home = function (v) { var w = setW(); while (v < 2 * w) v += w; while (v >= 3 * w) v -= w; return v; };
+
+    var IDLE = 1800, SPEED = 30; // ms of stillness before resuming; px per second
+    var user = false, hover = false, stopped = false, quietUntil = 0, x = 2 * setW(), last = 0;
+    sc.scrollLeft = x;
+
+    var touched = function () { user = true; quietUntil = performance.now() + IDLE; };
+    ["touchstart", "touchmove", "touchend", "pointerdown", "wheel", "keydown"].forEach(function (e) {
+      sc.addEventListener(e, touched, { passive: true });
     });
-    (function step() {
-      if (!held && !stopped) {
-        var half = track.scrollWidth / 2;
-        x += 0.5; if (x >= half) x -= half;
+    // momentum after a swipe keeps firing scroll events; while the visitor is in control they extend the wait
+    sc.addEventListener("scroll", function () { if (user) quietUntil = performance.now() + IDLE; }, { passive: true });
+    sc.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") hover = true; });
+    sc.addEventListener("pointerleave", function () { hover = false; });
+    sc.addEventListener("focusin", function () { hover = true; });
+    sc.addEventListener("focusout", function () { hover = false; touched(); });
+    btn.addEventListener("click", function () {
+      stopped = !stopped; btn.setAttribute("aria-pressed", stopped);
+      btn.textContent = stopped ? "Resume scrolling" : "Pause scrolling"; touched();
+    });
+
+    requestAnimationFrame(function step(now) {
+      var dt = Math.min(now - last, 50); last = now;
+      if (!stopped && !hover && now >= quietUntil) {
+        if (user) { user = false; x = home(sc.scrollLeft); }   // take over from where they stopped
+        x += SPEED * dt / 1000;
+        if (x >= 3 * setW()) x -= setW();
         sc.scrollLeft = x;
       }
       requestAnimationFrame(step);
-    })();
+    });
   })();
 
   var form = document.getElementById("estimate-form");
